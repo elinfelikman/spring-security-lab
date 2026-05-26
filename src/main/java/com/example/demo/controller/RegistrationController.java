@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.UserEntity;
+import com.example.demo.model.Role; // הוספנו ייבוא של ה-Enum שלנו!
 import com.example.demo.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,28 +14,29 @@ public class RegistrationController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // הזרקת ה-Repository וה-PasswordEncoder שיוצר את ה-Hash
     public RegistrationController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ה-Endpoint של ה-Sign Up (הרשמה)
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody UserEntity user) {
 
-        // 1. בדיקה למניעת כפילויות: האם שם המשתמש כבר תפוס?
+        // 1. בדיקה למניעת כפילויות
         if (userRepository.findByUsername(user.getUsername()) != null) {
             return ResponseEntity.badRequest().body("Error: Username already exists!");
         }
 
-        // 2. מניעת ה-Pit-fall: הצפנת הסיסמה של המשתמש החדש בעזרת BCrypt
+        // 2. הצפנת הסיסמה
         String hashedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(hashedPassword); // מעדכנים את הישות בסיסמה המוצפנת
-        user.setRole("ROLE_USER");        // מגדירים לו תפקיד ברירת מחדל של משתמש רגיל
+        user.setPassword(hashedPassword);
 
-        // 3. שמירת המשתמש החדש בדאטאבייס
+        // --- השינוי שלנו: שימוש ב-Enum במקום במחרוזת טקסט ---
+        // נגדיר שכל משתמש חדש שנרשם הוא כברירת מחדל סטודנט
+        user.setRole(Role.ROLE_STUDENT);
+
+        // 3. שמירה בדאטאבייס
         userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully with hashed password!");
+        return ResponseEntity.ok("User registered successfully with hashed password as a STUDENT!");
     }
 }

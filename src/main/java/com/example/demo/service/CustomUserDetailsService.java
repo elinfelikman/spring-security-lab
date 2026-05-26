@@ -30,7 +30,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         return User.builder()
                 .username(userEntity.getUsername())
                 .password(userEntity.getPassword()) // זו הסיסמה המוצפנת של ה-BCrypt
-                .roles(userEntity.getRole().replace("ROLE_", "")) // מוריד את הקידומת לצרכי קונפיגורציה
+
+                // התיקון שלנו: שימוש ב-.name() לפני חיתוך הקידומת
+                .roles(userEntity.getRole().name().replace("ROLE_", ""))
                 .build();
     }
 }
